@@ -69,13 +69,13 @@ state_table = raw_table  %>%
     pop_perseat_2020 = pop_perseat_2020_a)
 
 state_table = state_table %>% 
-  slice(-1) #Remove subheaders
+  slice(-1) #Remove subheaders now that this info has been merged with the main headers
 ```
 
 1.  Replace `__` with `NA`
 
 ```{r}
-# I had to do this step before the next one because the strange NA types were throwing errors
+# I had to do this step before the next one because the different types of NA present in the data were causing issues with column transformations
 
 placeholders = c("N/A", "—") # Define placeholder values
 
@@ -87,7 +87,8 @@ state_table_b = state_table %>%
 
 ```{r}
 state_table_c = state_table_b %>% 
-  mutate(
+# Many of the number fields were rendered as character fields. Used parse_number to extract fields that had % or other additional characters.
+    mutate(
     census_population_2024_07_01 = parse_number(census_population_2024_07_01),
     census_population_2020_04_01 = parse_number(census_population_2020_04_01),
     change_2010_2020_percent = parse_number(change_2010_2020_percent),
@@ -153,10 +154,12 @@ Print out a summary of the tables in this database.
 
 Write a SQL query to find all flights from the carrier "United Air Lines Inc.".
 
+#### Conducted a Join so that we can use the "name" field rather than the "carrier" field. While one is functionally the same as the other, the question specifically asks for data that comes from the airlines.name field.
+
 ```{sql connection=practcon}
 SELECT *
 FROM flights.main.flights AS flights
-LEFT JOIN flights.main.airlines AS airlines
+LEFT JOIN flights.main.airlines AS airlines 
 ON flights."carrier" = airlines."carrier"
 WHERE airlines.name LIKE 'United Air Lines Inc.'
 ```
@@ -165,9 +168,20 @@ WHERE airlines.name LIKE 'United Air Lines Inc.'
 
 Write a SQL query to count the total number of flights for each carrier.
 
+```{sql connection=practcon}
+SELECT carrier AS Carrier, COUNT(*)
+FROM flights.main.flights
+GROUP BY carrier 
+```
+
 ## Remember to Close the connection When You Are Done
 
 -   if the connection is open then you need to use `dbDisconnect()` function
+
+```{r}
+# Disconnect from Database so we can render
+DBI::dbDisconnect(practcon, shutdown = TRUE)
+```
 
 ## Submission
 
