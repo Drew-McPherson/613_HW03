@@ -44,7 +44,7 @@ library(stringr)
 # Target URL
 url = "https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_population"
 
-# Extract the target table
+# Extracting the target table
 page = read_html(url)
 tables = page |> 
   html_elements("table")
@@ -56,40 +56,49 @@ raw_table = tables[[1]] |>
 
 ```{r}
 # Clean column names
-state_table = raw_table %>% clean_names()
+state_table = raw_table  %>%  
+  clean_names() %>%  
+  rename(
+    census_population_2024_07_01 = census_population_8_9_a,
+    census_population_2020_04_01 = census_population_8_9_a_2,
+    change_2010_2020_percent = change_2010_2020_9_a,
+    change_2010_2020_abs = change_2010_2020_9_a_2,
+    house_seats = house_seats_b,
+    house_seats_percent = house_seats_b_2,
+    pop_perelec_vote_2020 = pop_perelec_vote_2020_c,
+    pop_perseat_2020 = pop_perseat_2020_a)
 
-
+state_table = state_table %>% 
+  slice(-1) #Remove subheaders
 ```
 
-1.  Make sure the class of each column is correct\
-2.  Replace `__` with `NA`
+1.  Replace `__` with `NA`
 
 ```{r}
-# Load required libraries
-library(rvest)
-library(dplyr)
-library(janitor)
-library(readr)
-library(stringr)
+# I had to do this step before the next one because the strange NA types were throwing errors
 
-# Wikipedia URL
-url <- "https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_population"
+placeholders = c("N/A", "—") # Define placeholder values
 
-# Read page content
-page <- read_html(url)
+state_table_b = state_table %>% 
+  mutate(across(where(is.character), ~ifelse(.x %in% placeholders, NA, .x)))
+```
 
-# Extract all tables on the page
-tables <- page %>% html_elements("table")
+1.  Make sure the class of each column is correct
 
-# Extract the first table (State and territory rankings)
-raw_table <- tables[[1]] %>% html_table(fill = TRUE)
-
-# Clean column names
-state_table <- raw_table %>% clean_names()
-
-# Print cleaned column names so we know exactly what they are
-print(names(state_table))
-
+```{r}
+state_table_c = state_table_b %>% 
+  mutate(
+    census_population_2024_07_01 = parse_number(census_population_2024_07_01),
+    census_population_2020_04_01 = parse_number(census_population_2020_04_01),
+    change_2010_2020_percent = parse_number(change_2010_2020_percent),
+    change_2010_2020_abs = parse_number(change_2010_2020_abs),
+    house_seats = parse_number(house_seats),
+    house_seats_percent = parse_number(house_seats_percent),
+    pop_perelec_vote_2020 = parse_number(pop_perelec_vote_2020),
+    pop_perseat_2020 = parse_number(pop_perseat_2020),
+    percent_us_2020 = parse_number(percent_us_2020),
+    percent_ec_2020 = parse_number(percent_ec_2020))
+str(state_table_c)
 ```
 
 ## SQL
