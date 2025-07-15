@@ -108,8 +108,12 @@ Please download a duck database. <https://data-science-master.github.io/lectures
 -   Use `duckdb()` and `DBI::dbConnect()` to create a connection to "flights.duckdb".
 
 ```{r}
-     practcon<- dbConnect(duckdb(dbdir = "./data/flights.duckdb", read_only = FALSE))
+practcon = dbConnect(duckdb(dbdir = "./data/flights.duckdb", read_only = FALSE))
 
+
+
+# con <- dbConnect(duckdb(dbdir = "./data/flights.duckdb", read_only = TRUE))
+# class(con)
 ```
 
 -   `dbConnect()`: This function establishes a connection to a database.
@@ -148,6 +152,14 @@ Print out a summary of the tables in this database.
 ### Problem 2: Select Flights from a Specific Carrier
 
 Write a SQL query to find all flights from the carrier "United Air Lines Inc.".
+
+```{sql connection=practcon}
+SELECT *
+FROM flights.main.flights AS flights
+LEFT JOIN flights.main.airlines AS airlines
+ON flights."carrier" = airlines."carrier"
+WHERE airlines.name LIKE 'United Air Lines Inc.'
+```
 
 ### Problem 3: Count the Number of Flights for Each Carrier
 
